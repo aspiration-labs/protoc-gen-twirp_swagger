@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	swagger_options "github.com/elliots/protoc-gen-twirp_swagger/options"
+	swagger_options "github.com/aspiration-labs/protoc-gen-twirp_swagger/options"
 	"github.com/golang/protobuf/proto"
 	pbdescriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
@@ -502,15 +502,15 @@ func templateToSwaggerPath(path string) string {
 	return strings.Join(parts, "/")
 }
 
-func renderServices(pkg string, services []*descriptor.Service, paths swaggerPathsObject, reg *descriptor.Registry, refs refMap) error {
+func renderServices(pkg string, services []*descriptor.Service, paths swaggerPathsObject, reg *descriptor.Registry, refs refMap, twirpRoute string) error {
 	// Correctness of svcIdx and methIdx depends on 'services' containing the services in the same order as the 'file.Service' array.
 	for svcIdx, svc := range services {
 		for methIdx, meth := range svc.Methods {
 			var path string
 			if pkg == "" {
-				path = fmt.Sprintf("/twirp/%s/%s", *svc.Name, *meth.Name)
+				path = fmt.Sprintf("%s/%s/%s", twirpRoute, *svc.Name, *meth.Name)
 			} else {
-				path = fmt.Sprintf("/twirp/%s.%s/%s", pkg, *svc.Name, *meth.Name)
+				path = fmt.Sprintf("%s/%s.%s/%s", twirpRoute, pkg, *svc.Name, *meth.Name)
 			}
 
 			parameters := swaggerParametersObject{}
@@ -632,7 +632,7 @@ func applyTemplate(p param) (string, error) {
 	// Loops through all the services and their exposed GET/POST/PUT/DELETE definitions
 	// and create entries for all of them.
 	refs := refMap{}
-	if err := renderServices(p.GetPackage(), p.Services, s.Paths, p.reg, refs); err != nil {
+	if err := renderServices(p.GetPackage(), p.Services, s.Paths, p.reg, refs, p.twirpRoute); err != nil {
 		panic(err)
 	}
 

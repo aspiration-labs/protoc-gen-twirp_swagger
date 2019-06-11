@@ -10,6 +10,7 @@ import (
 type param struct {
 	*descriptor.File
 	reg *descriptor.Registry
+	twirpRoute string
 }
 
 type binding struct {

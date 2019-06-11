@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/elliots/protoc-gen-twirp_swagger/genswagger"
+	"github.com/aspiration-labs/protoc-gen-twirp_swagger/genswagger"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
@@ -19,6 +19,7 @@ var (
 	importPrefix    = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
 	file            = flag.String("file", "stdin", "where to load data from")
 	allowDeleteBody = flag.Bool("allow_delete_body", false, "unless set, HTTP DELETE methods may not have a body")
+	twirpRoute      = flag.String("twirp_route", "/twirp", "prepend this path to twirp endpoints")
 )
 
 func parseReq(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
@@ -46,7 +47,7 @@ func main() {
 	glog.V(1).Info("Processing code generator request")
 	f := os.Stdin
 	if *file != "stdin" {
-		f, _ = os.Open("input.txt")
+		f, _ = os.Open(*file)
 	}
 	req, err := parseReq(f)
 	if err != nil {
@@ -65,7 +66,7 @@ func main() {
 	for k, v := range pkgMap {
 		reg.AddPkgMap(k, v)
 	}
-	g := genswagger.New(reg)
+	g := genswagger.New(reg, *twirpRoute)
 
 	if err := reg.Load(req); err != nil {
 		emitError(err)
